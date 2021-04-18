@@ -21,4 +21,3 @@
     - name: Test with pytest
       run: |
         python3 tests/intergration-test.py
-        # TODO RUN YOUR TESTS HERE
