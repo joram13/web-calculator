@@ -1,0 +1,24 @@
+
+    - name: psycopg2 prerequisites
+      run: sudo apt install libpq-dev
+
+    - name: Build docker image
+      run: |
+        docker network create -d bridge cs162-bridge-network
+        docker run --name=db --network=cs162-bridge-network -d --expose 5432 -p 5432:5432/tcp  -e "POSTGRES_DB=cs162" -e "POSTGRES_USER=cs162_user" -e "POSTGRES_PASSWORD=cs162_password" postgres:alpine
+        docker build -t cs162-flask:latest web
+        while ! psql "dbname=cs162 host=127.0.0.1 user=cs162_user password=cs162_password port=5432" -c 'SELECT 1'> /dev/null 2>&1; do
+          echo 'Waiting for postgres...'
+          sleep 1;
+        done;
+        docker run --name=cs162-instance --network=cs162-bridge-network -d --expose 5000 -p 5000:5000/tcp cs162-flask
+
+    - name: Install dependencies for tests
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r tests/requirements.txt
+        # TODO INSTALL YOUR TEST DEPENDENCIES HERE
+    - name: Test with pytest
+      run: |
+        python3 tests/intergration-test.py
+        # TODO RUN YOUR TESTS HERE
